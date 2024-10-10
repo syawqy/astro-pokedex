@@ -1,0 +1,217 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { Image } from 'astro:assets';
+
+export async function getStaticPaths() {
+  const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151');
+  const data = await response.json();
+  return data.results.map((pokemon: any, index: number) => ({
+    params: { id: index + 1 },
+  }));
+}
+
+const { id } = Astro.params;
+const backUrl = Astro.url.searchParams.get('back') || '/';
+
+async function getPokemonDetails(id: string) {
+  const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+  const data = await response.json();
+  return {
+    id: data.id,
+    name: data.name,
+    types: data.types.map((type: any) => type.type.name),
+    imageUrl: data.sprites.front_default,
+    height: data.height,
+    weight: data.weight,
+    abilities: data.abilities.map((ability: any) => ability.ability.name),
+    stats: data.stats.map((stat: any) => ({
+      name: stat.stat.name,
+      value: stat.base_stat,
+    })),
+  };
+}
+
+const pokemon = await getPokemonDetails(id);
+---
+
+<Layout title={`Pokemon: ${pokemon.name}`}>
+  <main class="container">
+    <a href={backUrl} class="back-link">&larr; Back to Pokedex</a>
+    <div class="pokemon-detail">
+      <div class="header">
+        <Image src={pokemon.imageUrl} alt={pokemon.name} width={200} height={200} />
+        <div class="info">
+          <h1>{pokemon.name}</h1>
+          <p class="id">#{pokemon.id}</p>
+          <div class="types">
+            {pokemon.types.map((type) => <span class={`type ${type.toLowerCase()}`}>{type}</span>)}
+          </div>
+          <div class="physical-info">
+            <p>Height: {pokemon.height / 10}m</p>
+            <p>Weight: {pokemon.weight / 10}kg</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="details">
+        <div class="abilities">
+          <h2>Abilities</h2>
+          <div class="ability-list">
+            {pokemon.abilities.map((ability) => (
+              <div class="ability">{ability}</div>
+            ))}
+          </div>
+        </div>
+        
+        <div class="stats">
+          <h2>Stats</h2>
+          {pokemon.stats.map((stat) => (
+            <div class="stat">
+              <span class="stat-name">{stat.name}</span>
+              <div class="stat-bar-container">
+                <div class="stat-bar">
+                  <div class="stat-fill" style={`width: ${(stat.value / 255) * 100}%`}></div>
+                </div>
+                <span class="stat-value">{stat.value}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: #4CAF50;
+    text-decoration: none;
+  }
+  .pokemon-detail {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  .header img {
+    width: 200px;
+    height: 200px;
+    margin-right: 2rem;
+  }
+  .info h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    text-transform: capitalize;
+  }
+  .id {
+    font-size: 1.5rem;
+    color: #666;
+  }
+  .types {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+  .type {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: white;
+    text-transform: capitalize;
+  }
+  .physical-info {
+    display: flex;
+    gap: 1rem;
+  }
+  .details {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+  }
+  .abilities, .stats {
+    width: 48%;
+  }
+  .ability-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .ability {
+    background-color: #f0f0f0;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    text-transform: capitalize;
+  }
+  .stat {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .stat-name {
+    width: 100px;
+    text-transform: capitalize;
+  }
+  .stat-bar-container {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+  }
+  .stat-bar {
+    flex-grow: 1;
+    height: 10px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-right: 10px;
+  }
+  .stat-fill {
+    height: 100%;
+    background-color: #4CAF50;
+  }
+  .stat-value {
+    width: 30px;
+    text-align: right;
+  }
+  /* Type-specific colors */
+  .normal { background-color: #A8A878; }
+  .fire { background-color: #F08030; }
+  .water { background-color: #6890F0; }
+  .electric { background-color: #F8D030; }
+  .grass { background-color: #78C850; }
+  .ice { background-color: #98D8D8; }
+  .fighting { background-color: #C03028; }
+  .poison { background-color: #A040A0; }
+  .ground { background-color: #E0C068; }
+  .flying { background-color: #A890F0; }
+  .psychic { background-color: #F85888; }
+  .bug { background-color: #A8B820; }
+  .rock { background-color: #B8A038; }
+  .ghost { background-color: #705898; }
+  .dragon { background-color: #7038F8; }
+  .dark { background-color: #705848; }
+  .steel { background-color: #B8B8D0; }
+  .fairy { background-color: #EE99AC; }
+</style>
+
+<script define:vars={{ pokemon }}>
+  // Cache individual Pokemon details in localStorage
+  const pokemonId = window.location.pathname.split('/').pop();
+  const cacheKey = `pokemon_${pokemonId}`;
+
+  if (!localStorage.getItem(cacheKey)) {
+    localStorage.setItem(cacheKey, JSON.stringify(pokemon));
+  }
+</script>

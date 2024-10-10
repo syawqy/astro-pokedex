@@ -1,0 +1,145 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PokemonCard from '../components/PokemonCard.astro';
+import Pagination from '../components/Pagination.astro';
+import { Image } from 'astro:assets';
+
+const ITEMS_PER_PAGE = 20;
+const page = parseInt(Astro.url.searchParams.get('page') || '1');
+const typeFilter = Astro.url.searchParams.get('type') || '';
+const searchQuery = Astro.url.searchParams.get('search') || '';
+
+// Function to fetch Pokemon data
+async function getPokemonData() {
+  const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151');
+  const data = await response.json();
+  return Promise.all(
+    data.results.map(async (pokemon: any) => {
+      const detailResponse = await fetch(pokemon.url);
+      const detailData = await detailResponse.json();
+      return {
+        id: detailData.id,
+        name: detailData.name,
+        types: detailData.types.map((type: any) => type.type.name),
+        imageUrl: detailData.sprites.front_default,
+      };
+    })
+  );
+}
+
+const allPokemon = await getPokemonData();
+
+// Filter and search functions
+const filteredPokemon = allPokemon.filter((pokemon) => {
+  const matchesType = typeFilter ? pokemon.types.includes(typeFilter) : true;
+  const matchesSearch = searchQuery ? pokemon.name.toLowerCase().includes(searchQuery.toLowerCase()) : true;
+  return matchesType && matchesSearch;
+});
+
+const totalPages = Math.ceil(filteredPokemon.length / ITEMS_PER_PAGE);
+const pokemonOnPage = filteredPokemon.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+---
+
+<Layout title="Pokedex">
+  <main>
+    <h1>Pokedex</h1>
+    
+    <form id="filterForm">
+      <input type="text" name="search" placeholder="Search Pokemon" value={searchQuery} />
+      <select name="type">
+        <option value="">All Types</option>
+        <option value="normal" selected={typeFilter === 'normal'}>Normal</option>
+        <option value="fire" selected={typeFilter === 'fire'}>Fire</option>
+        <option value="water" selected={typeFilter === 'water'}>Water</option>
+        <option value="electric" selected={typeFilter === 'electric'}>Electric</option>
+        <option value="grass" selected={typeFilter === 'grass'}>Grass</option>
+        <option value="ice" selected={typeFilter === 'ice'}>Ice</option>
+        <option value="fighting" selected={typeFilter === 'fighting'}>Fighting</option>
+        <option value="poison" selected={typeFilter === 'poison'}>Poison</option>
+        <option value="ground" selected={typeFilter === 'ground'}>Ground</option>
+        <option value="flying" selected={typeFilter === 'flying'}>Flying</option>
+        <option value="psychic" selected={typeFilter === 'psychic'}>Psychic</option>
+        <option value="bug" selected={typeFilter === 'bug'}>Bug</option>
+        <option value="rock" selected={typeFilter === 'rock'}>Rock</option>
+        <option value="ghost" selected={typeFilter === 'ghost'}>Ghost</option>
+        <option value="dragon" selected={typeFilter === 'dragon'}>Dragon</option>
+        <option value="dark" selected={typeFilter === 'dark'}>Dark</option>
+        <option value="steel" selected={typeFilter === 'steel'}>Steel</option>
+        <option value="fairy" selected={typeFilter === 'fairy'}>Fairy</option>
+      </select>
+      <button type="submit">Filter</button>
+    </form>
+
+    <div class="pokemon-grid">
+      {pokemonOnPage.map((pokemon) => (
+        <a href={`/pokemon/${pokemon.id}?back=${encodeURIComponent(`/?search=${searchQuery}&type=${typeFilter}&page=${page}`)}`}>
+          <PokemonCard {...pokemon} />
+        </a>
+      ))}
+    </div>
+
+    <Pagination currentPage={page} totalPages={totalPages} searchQuery={searchQuery} typeFilter={typeFilter} />
+  </main>
+</Layout>
+
+<style>
+  h1 {
+    text-align: center;
+    color: #333;
+  }
+  form {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  input, select, button {
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+  .pokemon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 2rem;
+  }
+  .pokemon-grid a {
+    text-decoration: none;
+    color: inherit;
+  }
+</style>
+
+<script>
+  // Client-side filtering and searching
+  const form = document.querySelector('#filterForm');
+  const input = document.querySelector('input[name="search"]');
+  const select = document.querySelector('select[name="type"]');
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const searchQuery = input?.value || '';
+    const typeFilter = select?.value || '';
+    window.location.href = `/?search=${searchQuery}&type=${typeFilter}&page=1`;
+  });
+
+  // Cache Pokemon data in localStorage
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!localStorage.getItem('pokemonData')) {
+      const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151');
+      const data = await response.json();
+      const pokemonData = await Promise.all(
+        data.results.map(async (pokemon) => {
+          const detailResponse = await fetch(pokemon.url);
+          const detailData = await detailResponse.json();
+          return {
+            id: detailData.id,
+            name: detailData.name,
+            types: detailData.types.map((type) => type.type.name),
+            imageUrl: detailData.sprites.front_default,
+          };
+        })
+      );
+      localStorage.setItem('pokemonData', JSON.stringify(pokemonData));
+    }
+  });
+</script>

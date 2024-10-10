@@ -1,0 +1,42 @@
+---
+interface Props {
+  currentPage: number;
+  totalPages: number;
+  searchQuery: string;
+  typeFilter: string;
+}
+
+const { currentPage, totalPages, searchQuery, typeFilter } = Astro.props;
+
+function getPageUrl(page: number) {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    search: searchQuery,
+    type: typeFilter
+  });
+  return `/?${params.toString()}`;
+}
+---
+
+<div class="pagination">
+  {currentPage > 1 && <a href={getPageUrl(currentPage - 1)}>Previous</a>}
+  <span>Page {currentPage} of {totalPages}</span>
+  {currentPage < totalPages && <a href={getPageUrl(currentPage + 1)}>Next</a>}
+</div>
+
+<style>
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .pagination a {
+    padding: 0.5rem 1rem;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+  }
+</style>

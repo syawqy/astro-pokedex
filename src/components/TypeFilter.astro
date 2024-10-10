@@ -1,0 +1,37 @@
+---
+const types = [
+  'normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison',
+  'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark',
+  'steel', 'fairy'
+];
+
+const currentType = Astro.url.searchParams.get('type') || '';
+---
+
+<form class="type-filter" action="/" method="get">
+  <label for="type-select">Filter by type:</label>
+  <select id="type-select" name="type" onchange="this.form.submit()">
+    <option value="">All types</option>
+    {types.map((type) => (
+      <option value={type} selected={type === currentType}>{type}</option>
+    ))}
+  </select>
+</form>
+
+<style>
+  .type-filter {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  label {
+    margin-right: 0.5rem;
+  }
+  select {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+</style>
