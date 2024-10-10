@@ -1,7 +1,8 @@
 
 # Astro Pokedex
 
-![Astro Pokedex Screenshot](path_to_screenshot)
+![Astro Pokedex Screenshot](https://raw.githubusercontent.com/syawqy/astro-pokedex/refs/heads/main/screenshot.png)
+
 
 Astro Pokedex is a simple, interactive Pokedex built using [Astro](https://astro.build/), showcasing Pokémon data in a sleek, fast, and SEO-friendly static site. With this project, you can browse through various Pokémon and view detailed information about each one.
 
