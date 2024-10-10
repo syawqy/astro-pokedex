@@ -1,6 +1,3 @@
-Here’s a draft for your README.md based on the repo "astro-pokedex":
-
----
 
 # Astro Pokedex
 
